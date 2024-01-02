@@ -52,6 +52,7 @@ cur = conn.cursor()
 
 username = input("username:")
 
+
 def drop_table():
     cur.execute("DROP TABLE IF EXISTS Players;")
 
@@ -65,8 +66,19 @@ def creer_table():
     """)
 
 def insert():
-    cur.execute("INSERT INTO Players (username, deaths) VALUES (?, 0)", (username,))
-    conn.commit()
+    cur.execute("SELECT * FROM Players")
+    result = cur.fetchall()
+    if len(result) == 0:
+        cur.execute("INSERT INTO Players (username, deaths) VALUES (?, 0)", (username,))
+        conn.commit()
+    else:
+        cur.execute("SELECT * FROM Players WHERE username = ?", (username,))
+        result = cur.fetchone()
+        if result is None:
+            cur.execute("INSERT INTO Players (username, deaths) VALUES (?, 0)", (username,))
+            conn.commit()
+
+
     
 def update_deaths(username, deaths):
     cur.execute("UPDATE Players SET deaths = ? WHERE username = ?", (deaths, username))
@@ -302,5 +314,5 @@ def draw():
 
         pyxel.text(50,64, 'GAME OVER', 7)
         
-pyxel.run(update, draw)
+"pyxel.run(update, draw)"
 conn.close()
