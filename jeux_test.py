@@ -1,4 +1,5 @@
-import pyxel, random, sqlite3
+import pyxel, random, sqlite3, pyodbc
+
 
 
 # taille de la fenetre 128x128 pixels
@@ -33,6 +34,8 @@ niveau = 1
 
 speed = 1
 
+deaths = 0
+
 score = 0
 
 nombre_ennemie = 0
@@ -44,32 +47,33 @@ boost_text_counter = 0
 
 random_target_position = [random.randint(0, 120), random.randint(95, 120)]
 
+conn = sqlite3.connect('data.db')
+cur = conn.cursor()
+
+username = input("username:")
+
+def drop_table():
+    cur.execute("DROP TABLE IF EXISTS Players;")
+
 def creer_table():
-    conn = sqlite3.connect('data.db')
-    cur = conn.cursor()
-    cur.execute("DROP TABLE IF EXISTS info;")
-    cur.execute("""CREATE TABLE info(
-                Score INT,
-                Vie INT,
-                Ennemie INT,
-                Potion Text);
-                """)
-    conn.commit()
-    conn.close()
+    cur.execute("""
+    CREATE TABLE if not exists Players(
+        ID INTEGER PRIMARY KEY,
+        username Varchar(20),
+        deaths INTEGER
+    );
+    """)
 
-def mise_a_jour():
-    conn = sqlite3.connect('data.db')
-    cur = conn.cursor()
-    info = {"Vie":vies, "Ennemies": compteur_ennemie, "Score": score, "Potion": text_potion}
-    cur.execute("""INSERT INTO info(Score, Vie, Ennemie, Potion) 
-                           Values  (:Score, :Vie, :Ennemies, :Potion)""", info)
-    res = cur.execute("SELECT Score FROM info")
-    score2 = res.fetchall()
-    conn.commit()
-    conn.close()    
-    return score2
+def insert():
+    cur.execute("INSERT INTO Players (username, deaths) VALUES (?, 0)", (username,))
 
+def update_deaths(username, deaths):
+    cur.execute("UPDATE Players SET deaths = ? WHERE username = ?", (deaths, username))
+
+drop_table()
 creer_table()
+insert()
+conn.commit()
 
 def vaisseau_deplacement(x, y):
     """Déplacement avec les touches de directions, en fonction de la vitesse et du niveau"""
@@ -102,9 +106,7 @@ def vaisseau_deplacement(x, y):
         boost_text_counter = 30 
         boost_vitesse = False
     return x, y 
-
-
-
+    
 
 def tirs_creation(x, y, tirs_liste):
     """création d'un tir avec la barre d'espace"""
@@ -150,13 +152,16 @@ def ennemis_deplacement(ennemis_liste):
 
 def vaisseau_suppression(vies):
     """disparition du vaisseau et d'un ennemi si contact"""
+    global deaths
 
     for ennemi in ennemis_liste:
         if ennemi[0] <= vaisseau_x+8 and ennemi[1] <= vaisseau_y+8 and ennemi[0]+8 >= vaisseau_x and ennemi[1]+8 >= vaisseau_y:
             ennemis_liste.remove(ennemi)
             vies -= 1
+            deaths += 1
             # on ajoute l'explosion
             explosions_creation(vaisseau_x, vaisseau_y)
+            update_deaths(username, deaths)
     return vies
 
 def incrementer_compteur():
@@ -171,6 +176,9 @@ def incrementer_compteur():
 def augmenter_score(points):
     global score
     score += points
+    """ # Mise à jour de la base de données
+    cur.execute("UPDATE info SET Score = Score + ?", (points,))
+    conn.commit()"""
 
 def ennemis_suppression():
     """disparition d'un ennemi et d'un tir si contact"""
@@ -234,8 +242,7 @@ def update():
     
     # evolution de l'animation des explosions
     explosions_animation()    
-    
-    mise_a_jour()
+
 # =========================================================
 # == DRAW
 # =========================================================
@@ -269,7 +276,7 @@ def draw():
             boost_text_counter -= 1  # Diminue le compteur
 
         # Afficher le score
-        pyxel.text(5, 115, 'Score:' + str(mise_a_jour()), 9)
+        pyxel.text(5, 115, 'Score:' + str(score), 9)
         
         # Dessine le marqueur de la case pour changer la vitesse
         if niveau > 0 and niveau % 2 == 0:
@@ -287,6 +294,6 @@ def draw():
     else:
 
         pyxel.text(50,64, 'GAME OVER', 7)
-
+        
 pyxel.run(update, draw)
-
+conn.close()
