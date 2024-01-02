@@ -66,14 +66,21 @@ def creer_table():
 
 def insert():
     cur.execute("INSERT INTO Players (username, deaths) VALUES (?, 0)", (username,))
-
+    conn.commit()
+    
 def update_deaths(username, deaths):
     cur.execute("UPDATE Players SET deaths = ? WHERE username = ?", (deaths, username))
+    conn.commit()
 
-drop_table()
+def get_deaths(username):
+    cur.execute("SELECT deaths FROM Players WHERE username = ?", (username,))
+    result = cur.fetchone()
+    return result[0] if result else 0
+
+
 creer_table()
 insert()
-conn.commit()
+
 
 def vaisseau_deplacement(x, y):
     """Déplacement avec les touches de directions, en fonction de la vitesse et du niveau"""
@@ -158,7 +165,7 @@ def vaisseau_suppression(vies):
         if ennemi[0] <= vaisseau_x+8 and ennemi[1] <= vaisseau_y+8 and ennemi[0]+8 >= vaisseau_x and ennemi[1]+8 >= vaisseau_y:
             ennemis_liste.remove(ennemi)
             vies -= 1
-            deaths += 1
+            deaths = get_deaths(username) + 1
             # on ajoute l'explosion
             explosions_creation(vaisseau_x, vaisseau_y)
             update_deaths(username, deaths)
