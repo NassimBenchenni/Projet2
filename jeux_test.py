@@ -1,5 +1,4 @@
-import pyxel, random, sqlite3, pyodbc
-
+import pyxel, random, sqlite3
 
 
 # taille de la fenetre 128x128 pixels
@@ -104,8 +103,9 @@ def update_score(username, score2):
     cur.execute("UPDATE Players set score = ? where username = ?", (score2, username))
     conn.commit()
 
-supprimer_utilisateur("b")
 
+
+drop_table()
 creer_table()
 insert()
 
@@ -207,15 +207,13 @@ def incrementer_compteur():
     compteur_ennemie = compteur_niveau
     return niveau
 
-def update_deaths(username, deaths):
-    cur.execute("UPDATE Players SET deaths = ? WHERE username = ?", (deaths, username))
-    conn.commit()
+
 # Fonction pour augmenter le score lorsqu'un ennemi est éliminé
 def augmenter_score(points):
     global score, score2
     score += points
     score2 = get_score(username)
-    score2 += score
+    score2 += points
     update_score(username, score2)
     
 
