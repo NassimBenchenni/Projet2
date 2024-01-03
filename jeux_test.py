@@ -53,6 +53,11 @@ cur = conn.cursor()
 username = input("username:")
 
 
+
+def supprimer_utilisateur(username):
+    cur.execute("DELETE FROM Players WHERE username = ?", (username,))
+    conn.commit()
+
 def drop_table():
     cur.execute("DROP TABLE IF EXISTS Players;")
 
@@ -61,7 +66,8 @@ def creer_table():
     CREATE TABLE if not exists Players(
         ID INTEGER PRIMARY KEY,
         username Varchar(20),
-        deaths INTEGER
+        deaths INTEGER,
+        score INTEGER
     );
     """)
 
@@ -69,13 +75,13 @@ def insert():
     cur.execute("SELECT * FROM Players")
     result = cur.fetchall()
     if len(result) == 0:
-        cur.execute("INSERT INTO Players (username, deaths) VALUES (?, 0)", (username,))
+        cur.execute("INSERT INTO Players (username, deaths, score) VALUES (?, 0, 0)", (username,))
         conn.commit()
     else:
         cur.execute("SELECT * FROM Players WHERE username = ?", (username,))
         result = cur.fetchone()
         if result is None:
-            cur.execute("INSERT INTO Players (username, deaths) VALUES (?, 0)", (username,))
+            cur.execute("INSERT INTO Players (username, deaths, score) VALUES (?, 0, 0)", (username,))
             conn.commit()
 
 
@@ -89,6 +95,16 @@ def get_deaths(username):
     result = cur.fetchone()
     return result[0] if result else 0
 
+def get_score(username):
+    cur.execute("SELECT score FROM Players WHERE username = ?", (username,))
+    result = cur.fetchone()
+    return result[0] if result else 0
+
+def update_score(username, score2):
+    cur.execute("UPDATE Players set score = ? where username = ?", (score2, username))
+    conn.commit()
+
+supprimer_utilisateur("b")
 
 creer_table()
 insert()
@@ -191,13 +207,17 @@ def incrementer_compteur():
     compteur_ennemie = compteur_niveau
     return niveau
 
+def update_deaths(username, deaths):
+    cur.execute("UPDATE Players SET deaths = ? WHERE username = ?", (deaths, username))
+    conn.commit()
 # Fonction pour augmenter le score lorsqu'un ennemi est éliminé
 def augmenter_score(points):
-    global score
+    global score, score2
     score += points
-    """ # Mise à jour de la base de données
-    cur.execute("UPDATE info SET Score = Score + ?", (points,))
-    conn.commit()"""
+    score2 = get_score(username)
+    score2 += score
+    update_score(username, score2)
+    
 
 def ennemis_suppression():
     """disparition d'un ennemi et d'un tir si contact"""
@@ -314,5 +334,5 @@ def draw():
 
         pyxel.text(50,64, 'GAME OVER', 7)
         
-"pyxel.run(update, draw)"
+pyxel.run(update, draw)
 conn.close()
