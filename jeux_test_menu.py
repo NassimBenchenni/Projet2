@@ -4,7 +4,7 @@ import pyxel, random, sqlite3, pygame, sys
 
 # taille de la fenetre 128x128 pixels
 # ne pas modifier
-pyxel.init(128, 128, title="Space_invaders")
+
 
 # position initiale du vaisseau
 # (origine des positions : coin haut gauche)
@@ -48,127 +48,10 @@ boost_text_counter = 0
 
 random_target_position = [random.randint(0, 120), random.randint(95, 120)]
 
-WIDTH, HEIGHT = 640, 480
-WHITE = (255, 255, 255)
-
-
-
-class Menu:
-    def __init__(self):
-        pygame.init()  # Initialize Pygame
-        self.options = ['Start Game', 'Score', 'Exit']
-        self.font = pygame.font.Font(None, 36)
-        self.texts = []
-
-    def render(self, screen):
-        screen.fill((0, 0, 0))
-        self.texts = []
-
-        for i, option in enumerate(self.options):
-            text = self.font.render(option, True, WHITE)
-            screen.blit(text, (WIDTH // 2 - text.get_width() // 2, HEIGHT // (len(self.options) + 1) * (i + 1)))
-            self.texts.append(text)
-
-    def check_click(self, pos):
-        x, y = pos
-        for i, text in enumerate(self.texts):
-            if WIDTH // 2 - text.get_width() // 2 <= x <= WIDTH // 2 + text.get_width() // 2:
-                if HEIGHT // (len(self.options) + 1) * (i + 1) <= y <= HEIGHT // (len(self.options) + 1) * (i + 1) + text.get_height():
-                    return self.options[i]
-
-def game_loop():
-    # Initialize Pygame
-    pygame.init()
-
-    # Set up some constants
-    WIDTH, HEIGHT = 640, 480
-    WHITE = (255, 255, 255)
-
-    # Create the screen
-    screen = pygame.display.set_mode((WIDTH, HEIGHT))
-
-    menu = Menu()
-
-    while True:
-        menu.render(screen)
-
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                pygame.quit()
-                sys.exit()
-            elif event.type == pygame.MOUSEBUTTONDOWN:
-                result = menu.check_click(pygame.mouse.get_pos())
-                if result is not None:
-                    print(f"{result} clicked")
-                    if result == "Start Game":
-                        pyxel.run(update, draw)
-
-        pygame.display.flip()
-
-game_loop()
 
 
 
 
-
-
-conn = sqlite3.connect('data.db')
-cur = conn.cursor()
-
-username = input("username:")
-
-def supprimer_utilisateur(username):
-    cur.execute("DELETE FROM Players WHERE username = ?", (username,))
-    conn.commit()
-
-def drop_table():
-    cur.execute("DROP TABLE IF EXISTS Players;")
-
-def creer_table():
-    cur.execute("""
-    CREATE TABLE if not exists Players(
-        ID INTEGER PRIMARY KEY,
-        username Varchar(20),
-        deaths INTEGER,
-        score INTEGER
-    );
-    """)
-
-def insert():
-    cur.execute("SELECT * FROM Players")
-    result = cur.fetchall()
-    if len(result) == 0:
-        cur.execute("INSERT INTO Players (username, deaths, score) VALUES (?, 0, 0)", (username,))
-        conn.commit()
-    else:
-        cur.execute("SELECT * FROM Players WHERE username = ?", (username,))
-        result = cur.fetchone()
-        if result is None:
-            cur.execute("INSERT INTO Players (username, deaths, score) VALUES (?, 0, 0)", (username,))
-            conn.commit()
-
-
-    
-def update_deaths(username, deaths):
-    cur.execute("UPDATE Players SET deaths = ? WHERE username = ?", (deaths, username))
-    conn.commit()
-
-def get_deaths(username):
-    cur.execute("SELECT deaths FROM Players WHERE username = ?", (username,))
-    result = cur.fetchone()
-    return result[0] if result else 0
-
-def get_score(username):
-    cur.execute("SELECT score FROM Players WHERE username = ?", (username,))
-    result = cur.fetchone()
-    return result[0] if result else 0
-
-def update_score(username, score2):
-    cur.execute("UPDATE Players set score = ? where username = ?", (score2, username))
-    conn.commit()
-
-creer_table()
-insert()
 
 
 def vaisseau_deplacement(x, y):
@@ -393,4 +276,85 @@ def draw():
 
         pyxel.text(50,64, 'GAME OVER', 7)
   
+
+conn = sqlite3.connect('data.db')
+cur = conn.cursor()
+
+username = input("username:")
+
+def supprimer_utilisateur(username):
+    cur.execute("DELETE FROM Players WHERE username = ?", (username,))
+    conn.commit()
+
+def drop_table():
+    cur.execute("DROP TABLE IF EXISTS Players;")
+
+def creer_table():
+    cur.execute("""
+    CREATE TABLE if not exists Players(
+        ID INTEGER PRIMARY KEY,
+        username Varchar(20),
+        deaths INTEGER,
+        score INTEGER
+    );
+    """)
+
+def insert():
+    cur.execute("SELECT * FROM Players")
+    result = cur.fetchall()
+    if len(result) == 0:
+        cur.execute("INSERT INTO Players (username, deaths, score) VALUES (?, 0, 0)", (username,))
+        conn.commit()
+    else:
+        cur.execute("SELECT * FROM Players WHERE username = ?", (username,))
+        result = cur.fetchone()
+        if result is None:
+            cur.execute("INSERT INTO Players (username, deaths, score) VALUES (?, 0, 0)", (username,))
+            conn.commit()
+
+
+    
+def update_deaths(username, deaths):
+    cur.execute("UPDATE Players SET deaths = ? WHERE username = ?", (deaths, username))
+    conn.commit()
+
+def get_deaths(username):
+    cur.execute("SELECT deaths FROM Players WHERE username = ?", (username,))
+    result = cur.fetchone()
+    return result[0] if result else 0
+
+def get_score(username):
+    cur.execute("SELECT score FROM Players WHERE username = ?", (username,))
+    result = cur.fetchone()
+    return result[0] if result else 0
+
+def update_score(username, score2):
+    cur.execute("UPDATE Players set score = ? where username = ?", (score2, username))
+    conn.commit()
+
+
+creer_table()
+insert()  
+
+def menu():
+    while True:
+        print("1. Jouer")
+        print("2. Voir les scores")
+        print("3. Quitter")
+        choix = input("Choisissez une option : ")
+        if choix == "1":
+            # Insérez ici le code pour démarrer le jeu
+            pyxel.init(128, 128, title="Space_invaders")
+            pyxel.run(update, draw)
+        elif choix == "2":
+            # Insérez ici le code pour afficher les scores
+            print("Score:" + str(get_score(username)))
+            print("Deaths:" + str(get_deaths(username)))
+        elif choix == "3":
+            pyxel.quit()
+        else:
+            print("Choix invalide. Veuillez réessayer.")
+
+# Appeler la fonction menu pour afficher le menu
+menu()
 
