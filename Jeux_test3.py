@@ -355,8 +355,8 @@ def texte():
         color = 3 if i == menu_option else 6
         pyxel.text(10, 30 + 10 * i, option, color)
     pyxel.text(30, 10, "Space Invaders", 2)
-    pyxel.text(10, 80, "Utiliser les fleches", 15)
-    pyxel.text(10, 90, "Espace pour valider", 15)
+    pyxel.text(10, 78, "-Utiliser les fleches", 15)
+    pyxel.text(10, 92, "-Espace pour valider", 15)
     
 
 def afficher_score():
@@ -383,6 +383,9 @@ while True:
         break
 
 conn.close()
+
+
+
 
 
 
