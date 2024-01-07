@@ -1,5 +1,5 @@
 
-import pyxel, random, sqlite3, pygame, sys
+import pyxel, random, sqlite3
 
 
 
@@ -53,16 +53,11 @@ random_target_position = [random.randint(0, 120), random.randint(95, 120)]
 conn = sqlite3.connect('data.db')
 cur = conn.cursor()
 
+
+
 username = input("username:")
 
 
-
-def supprimer_utilisateur(username):
-    cur.execute("DELETE FROM Players WHERE username = ?", (username,))
-    conn.commit()
-
-def drop_table():
-    cur.execute("DROP TABLE IF EXISTS Players;")
 
 def creer_table():
     cur.execute("""
@@ -74,20 +69,13 @@ def creer_table():
     );
     """)
 
+
 def insert():
-    cur.execute("SELECT * FROM Players")
-    result = cur.fetchall()
-    if len(result) == 0:
+    cur.execute("SELECT * FROM Players WHERE username = ?", (username,))
+    result = cur.fetchone()
+    if result is None:
         cur.execute("INSERT INTO Players (username, deaths, score) VALUES (?, 0, 0)", (username,))
         conn.commit()
-    else:
-        cur.execute("SELECT * FROM Players WHERE username = ?", (username,))
-        result = cur.fetchone()
-        if result is None:
-            cur.execute("INSERT INTO Players (username, deaths, score) VALUES (?, 0, 0)", (username,))
-            conn.commit()
-
-
     
 def update_deaths(username, deaths):
     cur.execute("UPDATE Players SET deaths = ? WHERE username = ?", (deaths, username))
@@ -107,6 +95,12 @@ def update_score(username, score2):
     cur.execute("UPDATE Players set score = ? where username = ?", (score2, username))
     conn.commit()
 
+def supprimer_utilisateur(username):
+    cur.execute("DELETE FROM Players WHERE username = ?", (username,))
+    conn.commit()
+
+def drop_table():
+    cur.execute("DROP TABLE IF EXISTS Players;")
 
 creer_table()
 insert()
@@ -381,6 +375,7 @@ while True:
         pyxel.run(update, draw)
     if option == "Quitter":
         break
+
 
 conn.close()
 
