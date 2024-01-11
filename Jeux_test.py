@@ -326,34 +326,43 @@ def draw():
     # sinon: GAME OVER
     else:
         
+        # si le joueur meurt, le menu est relancé
         start()
         
         
+
+
+# Fonction pour gérer le menu
 def menu():
     global menu_option, afficher
 
+    # Si l'utilisateur appuie sur la flèche du haut, on déplace la sélection du menu vers le haut
     if pyxel.btnp(pyxel.KEY_UP):
         menu_option = (menu_option - 1) % len(menu_options)
+    # Si l'utilisateur appuie sur la flèche du bas, on déplace la sélection du menu vers le bas
     elif pyxel.btnp(pyxel.KEY_DOWN):
         menu_option = (menu_option + 1) % len(menu_options)
 
+    # Si l'utilisateur appuie sur espace, on effectue l'action correspondant à l'option sélectionnée
     if pyxel.btnp(pyxel.KEY_SPACE):
         if menu_options[menu_option] == "Voir les scores":
             afficher = not afficher
         return menu_options[menu_option]
 
+# Fonction pour afficher le texte du menu
 def texte():
     global menu_option
     pyxel.cls(0)
 
+    # Affichage des options du menu
     for i, option in enumerate(menu_options):
         color = 3 if i == menu_option else 6
         pyxel.text(10, 30 + 10 * i, option, color)
     pyxel.text(30, 10, "Space Invaders", 2)
     pyxel.text(10, 78, "-Utiliser les fleches", 15)
     pyxel.text(10, 92, "-Espace pour valider", 15)
-    
 
+# Fonction pour afficher le score
 def afficher_score():
     if afficher:
         deaths_actuelle = str(get_deaths(username))
@@ -361,11 +370,16 @@ def afficher_score():
         pyxel.text(80, 40, "Score:" + score_actuelle, 7) 
         pyxel.text(80, 50, "Morts:" + deaths_actuelle, 7) 
 
+
+# Initialisation des variables globales
 menu_option = 0
 menu_options = ["Jouer", "Voir les scores", "Quitter"]
 afficher = False  
+
+# Initialisation de la fenêtre Pyxel
 pyxel.init(128, 128, title="Menu")
 
+# Fonction principale pour démarrer le jeu
 def start():
     while True:
         option = menu()
@@ -373,12 +387,17 @@ def start():
         afficher_score()  
         pyxel.flip()
 
+        # Si l'option sélectionnée est "Jouer", on lance le jeu
         if option == "Jouer":
             pyxel.run(update, draw)
+        # Si l'option sélectionnée est "Quitter", on quitte le jeu
         if option == "Quitter":
             break
+
+# Démarrage du jeu
 start()
 
+# Fermeture de la connexion
 conn.close()
 
 
